@@ -1,20 +1,20 @@
 ﻿using System;
 using System.IO;
-using System.Timers;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Word_Family_Guess_the_word_game_
 {
     class WordFamily
     {
         private static Random random = new Random();
-        private static string chosenWord;
+        private static int chosenIndex;
         private static string Input;
         private static bool win;
         private static List<string> gameAnswers; //list to hold dictionary words
         private static int wordSize;
         private static List<string> guessDisplay;
+        private static List<string> match;
+        private static List<string> notMatch;
 
         public static void Initialise()
         {
@@ -69,12 +69,14 @@ namespace Word_Family_Guess_the_word_game_
         
         public static void GamePlay()
         {
-            List<string> containGuess = new List<string>();
-            List<string> notContainGuess = new List<string>();
+            int iteration;
+            match = new List<string>();
+            notMatch = new List<string>();
             while (!win)
             {
-                containGuess.Clear();
-                notContainGuess.Clear();
+                iteration = 0;
+                match.Clear();
+                notMatch.Clear();
                 Console.Write("Player Guess: ");
                 foreach (string letter in guessDisplay)
                 {
@@ -87,28 +89,36 @@ namespace Word_Family_Guess_the_word_game_
 
                 for(int x=0;x<gameAnswers.Count;x++)
                 {
-                    if(gameAnswers[x].Contains(Input) & LetterFill(Input, guessDisplay, gameAnswers[x]))
+                    if(gameAnswers[x].Contains(Input))
                     {
-                        containGuess.Add(gameAnswers[x]);
+                        match.Add(gameAnswers[x]);
                     }
                     else
                     {
-                        notContainGuess.Add(gameAnswers[x]);
+                        notMatch.Add(gameAnswers[x]);
                     }
                 }
 
-                if(containGuess.Count>=notContainGuess.Count)
+                for(int k=0;k<guessDisplay.Count;k++)
+                {
+                    if(guessDisplay[k]!="_")
+                    { iteration++;}
+                }
+
+                if(iteration>0) { LetterFill();}
+
+                if(match.Count<notMatch.Count)
                 {
                     gameAnswers.Clear();
-                    UpdateWordFamily(containGuess);
+                    UpdateWordFamily(match);
 
                     Console.WriteLine("Correct!");
                     char guess = Input[0];
-                    chosenWord = gameAnswers[random.Next(gameAnswers.Count)].ToUpper();
+                    chosenIndex = random.Next(wordSize);
 
-                    for (int i = 0; i < chosenWord.Length; i++)
+                    for (int i = 0; i < guessDisplay.Count; i++)
                     {
-                        if (chosenWord[i].Equals(guess) == true)
+                        if (i == chosenIndex & guessDisplay[i] == "_")
                         {
                             guessDisplay[i] = Input;
                         }
@@ -117,13 +127,13 @@ namespace Word_Family_Guess_the_word_game_
                     if (guessDisplay.Contains("_") == false)
                     {
                         win = true;
-                        Console.WriteLine("The chosen word is " + chosenWord);
+                        Console.WriteLine("The chosen word is " + gameAnswers[random.Next(gameAnswers.Count)]);
                     }
                 }
                 else
                 {
                     gameAnswers.Clear();
-                    UpdateWordFamily(notContainGuess);
+                    UpdateWordFamily(notMatch);
                     Console.WriteLine("Incorrect guess! Try again");
                 }
             }
@@ -139,23 +149,32 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
-        public static bool LetterFill(string guess, List<string> guessProgress, string word)
+        public static void LetterFill()
         {
-            bool match = true;
-            for(int i=0;i<word.Length;i++)
+            string word;
+            bool correct = true;
+            for(int i=0;i<match.Count;i++)
             {
-                if(guessProgress[i].Equals(word[i]) & guessProgress[i] != "_")
+                word = match[i];
+                for (int j = 0; j < guessDisplay.Count; j++)
                 {
-                    match = true;
+                    if (guessDisplay[j].Equals(word[j]) & guessDisplay[j] != "_")
+                    {
+                        correct = true;
+                    }
+                    else
+                    {
+                        correct = false;
+                        break;
+                    }
                 }
-                else
+
+                if (correct == false)
                 {
-                    match = false;
-                    break;
+                    notMatch.Add(word);
+                    match.RemoveAt(i);
                 }
             }
-
-            return match;
         }
 
         public static void GameConclude()
