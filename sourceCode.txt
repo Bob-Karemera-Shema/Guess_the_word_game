@@ -1,0 +1,42 @@
+public static viod Gameplay()
+{
+    match = new list<string>();
+    notMatch = new list<string>();
+do
+{
+    match.clear();
+    notMatch.clear();
+    Console.Write("Player Guess: ");
+    foreach (string letter in guessDisplay)
+    {
+        Console.Write(letter);
+    }
+    Console.WriteLine();
+    Console.Write("Enter your guess: ");
+    Input = Console.ReadLine().ToUpper();
+    Console.WriteLine();
+    for(int x=0;x<gameAnswers.Count;x++)
+    {
+        for(int y=0;y<wordsize;y++)
+        {
+            if(gameAnswers[x].Contains(Input))
+            {
+                if(input == guessDisplay[y])
+                {
+                    notMatch.Add(gameAnswers[x]);
+                    continue;
+                }
+                if(gameAnswers[x].Contains(input))
+                {
+                    match.Add(gameAnswers[x]);
+                }
+            }
+            else
+            {
+                notMatch.Add(gameAnswers[x]);
+            }
+        }
+    }
+}
+while(!win & nbrOfAttempts!=0)
+}

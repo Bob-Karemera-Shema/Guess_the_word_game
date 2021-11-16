@@ -7,14 +7,14 @@ namespace Word_Family_Guess_the_word_game_
     class WordFamily
     {
         private static Random random = new Random();
-        private static int chosenIndex;
-        private static string Input;
+        private static string input;
         private static bool win;
         private static List<string> gameAnswers; //list to hold dictionary words
         private static int wordSize;
         private static List<string> guessDisplay;
         private static List<string> match;
         private static List<string> notMatch;
+        private static int nbrOfAttempts;
 
         public static void Initialise()
         {
@@ -47,21 +47,20 @@ namespace Word_Family_Guess_the_word_game_
             }
             win = false;
 
-            GameIntro();
-        }
-
-        public static void GameIntro()
-        {
-            //chosenWord = gameAnswers[random.Next(gameAnswers.Count)].ToUpper();
-            //int length = wordSize;
             guessDisplay = new List<string>(wordSize);
             for (int i = 0; i < wordSize; i++)
             {
                 guessDisplay.Add("_");
             }
+            nbrOfAttempts = wordSize * 2;
+            match = new List<string>();
+            notMatch = new List<string>();
 
-            int nbrOfAttempts = wordSize * 2;
+            GameIntro();
+        }
 
+        public static void GameIntro()
+        {
             Console.WriteLine("Discover the word in "+ nbrOfAttempts + " attempts by guessing using letters.");
             Console.WriteLine("This word has: " + wordSize + " letters. Good luck!");
             GamePlay();
@@ -69,12 +68,9 @@ namespace Word_Family_Guess_the_word_game_
         
         public static void GamePlay()
         {
-            int iteration;
-            match = new List<string>();
-            notMatch = new List<string>();
-            while (!win)
+            int iteration=0;
+            while (!win & nbrOfAttempts != 0)
             {
-                iteration = 0;
                 match.Clear();
                 notMatch.Clear();
                 Console.Write("Player Guess: ");
@@ -84,12 +80,12 @@ namespace Word_Family_Guess_the_word_game_
                 }
                 Console.WriteLine();
                 Console.Write("Enter your guess: ");
-                Input = Console.ReadLine().ToUpper();
+                input = Console.ReadLine().ToUpper();
                 Console.WriteLine();
 
                 for(int x=0;x<gameAnswers.Count;x++)
                 {
-                    if(gameAnswers[x].Contains(Input))
+                    if(gameAnswers[x].Contains(input))
                     {
                         match.Add(gameAnswers[x]);
                     }
@@ -113,14 +109,13 @@ namespace Word_Family_Guess_the_word_game_
                     UpdateWordFamily(match);
 
                     Console.WriteLine("Correct!");
-                    char guess = Input[0];
-                    chosenIndex = random.Next(wordSize);
-
+                    char guess = input[0];
+                    int chosenIndex = random.Next(wordSize);
                     for (int i = 0; i < guessDisplay.Count; i++)
                     {
                         if (i == chosenIndex & guessDisplay[i] == "_")
                         {
-                            guessDisplay[i] = Input;
+                            guessDisplay[i] = input;
                         }
                     }
 
@@ -136,6 +131,7 @@ namespace Word_Family_Guess_the_word_game_
                     UpdateWordFamily(notMatch);
                     Console.WriteLine("Incorrect guess! Try again");
                 }
+                nbrOfAttempts--;
             }
 
             GameConclude();
@@ -158,14 +154,11 @@ namespace Word_Family_Guess_the_word_game_
                 word = match[i];
                 for (int j = 0; j < guessDisplay.Count; j++)
                 {
-                    if (guessDisplay[j].Equals(word[j]) & guessDisplay[j] != "_")
+                    if (guessDisplay[j] != "_")
                     {
-                        correct = true;
-                    }
-                    else
-                    {
-                        correct = false;
-                        break;
+                        if(guessDisplay[j].Equals(word[j]))
+                        { correct = true; }
+                        else { correct = false;}
                     }
                 }
 
