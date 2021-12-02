@@ -15,6 +15,17 @@ namespace Word_Family_Guess_the_word_game_
         private static List<string> match;
         private static List<string> notMatch;
         private static int nbrOfAttempts;
+        private static int initialWordIndex;
+        private static List<string> family1 = new List<string> {"a"};
+        private static List<string> family2 = new List<string> { "a" };
+        private static List<string> family3 = new List<string> { "a" };
+        private static List<string> family4 = new List<string> { "a" };
+        private static List<string> family5 = new List<string> { "a" };
+        private static List<string> family6 = new List<string> { "a" };
+        private static List<string> family7 = new List<string> { "a" };
+        private static List<string> biggestFamilyCharRep = new List<string>();
+        private static List<string> biggestIndexFamily = new List<string>();
+        private static int updateStatus = 0;
 
         public static void Initialise()
         {
@@ -52,129 +63,242 @@ namespace Word_Family_Guess_the_word_game_
             {
                 guessDisplay.Add("_");
             }
+            for (int j = 0; j < wordSize; j++)
+            {
+
+            }
+
             nbrOfAttempts = wordSize * 2;
             match = new List<string>();
             notMatch = new List<string>();
+            initialWordIndex = random.Next(wordSize);
 
             GameIntro();
         }
 
         public static void GameIntro()
         {
-            Console.WriteLine("Discover the word in "+ nbrOfAttempts + " attempts by guessing using letters.");
+            Console.Clear();
+            Console.WriteLine("Discover the word in " + nbrOfAttempts + " attempts by guessing using letters.");
             Console.WriteLine("This word has: " + wordSize + " letters. Good luck!");
+            Console.WriteLine("Enter a letter between A-Z");
             GamePlay();
         }
-        
+
+        public static void GameInput()
+        {
+            Console.Write("Player Guess: ");
+            foreach (string letter in guessDisplay)
+            {
+                Console.Write(letter);
+            }
+            Console.WriteLine();
+            Console.Write("Enter your guess: ");
+            input = Console.ReadLine().ToUpper();
+            Console.WriteLine();
+
+            if (((int)input[0] > 96 & (int)input[0] < 123))
+            {
+                Console.WriteLine("Your input was not a letter of the alphabet!");
+                Console.WriteLine("Enter a letter between A-Z");
+                GameInput();
+            }
+        }
+
+        public static void DictionaryCheck()
+        {
+            for (int x = 0; x < gameAnswers.Count; x++)
+            {
+                if (gameAnswers[x].Contains(input))
+                {
+                    match.Add(gameAnswers[x]);
+                }
+                else
+                {
+                    notMatch.Add(gameAnswers[x]);
+                }
+            }
+        }
+
+        public static void CheckFamilies()
+        {
+            int count = 0;
+            int bigFamily = 0;
+            int[] familyArray = new int[7];
+            string currentWord;
+
+            for (int x = 0;x < familyArray.Length;x++)
+            {
+                familyArray[x] = 0;
+            }
+
+            for (int i = 0; i < match.Count; i++)
+            {
+                count = 0;
+                currentWord = match[i];
+                for (int j = 0; j < match[i].Length; j++)
+                {
+                    if (currentWord[j].Equals(input[0]))
+                    {
+                        count++;
+                    }
+                }
+                UpdateFamilies(count, ref familyArray);
+            }
+
+            bigFamily = GetMax(familyArray);
+            UpdateBigCharFamily(bigFamily);
+            CheckIndexFamily();
+        }
+
+        public static void UpdateFamilies(int count, ref int[] families)
+        {
+            if (count == 1) { families[count--] = count; }
+            else if (count == 2) { families[count--] = count; }
+            else if (count == 3) { families[count--] = count; }
+            else if (count == 4) { families[count--] = count; }
+            else if (count == 5) { families[count--] = count; }
+            else if (count == 6) { families[count--] = count; }
+            else { families[count--] = count; }
+        }
+
+        public static void CheckIndexFamily()
+        {
+            int maxIndex = 0;
+            int[] indexArray = new int[guessDisplay.Count];
+
+            for (int x = 0; x < wordSize; x++)
+            {
+                indexArray[x] = 0;
+            }
+
+            for (int i = 0; i < biggestFamilyCharRep.Count; i++)
+            {
+                for (int j = 0; j < guessDisplay.Count; j++)
+                {
+                    if (biggestFamilyCharRep[i][j].Equals(input[0]) & (guessDisplay[i] == "_"))
+                    {
+                        indexArray[i]++;
+                    }
+                }
+            }
+
+            maxIndex = GetMax(indexArray);
+            UpdateBigIndexFamily(maxIndex);
+        }
+
+        public static int GetMax(int[] array)
+        {
+            int max = array[0];
+            for (int i = 1; i < array.Length; i++)
+            {
+                if (array[i] > max) { max = array[i]; }
+            }
+            return max;
+        }
+
+        public static void UpdateBigCharFamily(int count)
+        {
+            int index = 0;
+
+            for (int x = 0;x < match.Count; x++)
+            {
+                index = 0;
+                for(int i = 0;i < match[x].Length; i++)
+                {
+                    if(match[x][i].Equals(input[0]))
+                    { index++; }
+                }
+
+                if(index == count)
+                { biggestFamilyCharRep.Add(match[x]);}
+            }
+        }
+
+        public static void UpdateBigIndexFamily(int index)
+        {
+            string currentWord;
+
+            for (int x = 0; x < wordSize; x++)
+            {
+                if (x == index)
+                {
+                    for (int i = 0; i < biggestFamilyCharRep.Count; i++)
+                    {
+                        currentWord = biggestFamilyCharRep[i];
+                        if (currentWord[index].Equals(input[0]) & (guessDisplay[i] == "_"))
+                        {
+                            biggestIndexFamily.Add(currentWord);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void UpdateGuessProgress()
+        {
+            string randomWord = biggestIndexFamily[random.Next(biggestIndexFamily.Count)];
+
+            for (int i = 0; i < wordSize; i++)
+            {
+                if (randomWord[i].Equals(input[0]))
+                {
+                    guessDisplay[i] = input;
+                }
+            }
+        }
+
         public static void GamePlay()
         {
-            int iteration=0;
             while (!win & nbrOfAttempts != 0)
             {
                 match.Clear();
                 notMatch.Clear();
-                Console.Write("Player Guess: ");
-                foreach (string letter in guessDisplay)
+
+                GameInput();
+                DictionaryCheck();
+
+                if (match.Count < notMatch.Count)
                 {
-                    Console.Write(letter);
-                }
-                Console.WriteLine();
-                Console.Write("Enter your guess: ");
-                input = Console.ReadLine().ToUpper();
-                Console.WriteLine();
-
-                for(int x=0;x<gameAnswers.Count;x++)
-                {
-                    if(gameAnswers[x].Contains(input))
-                    {
-                        match.Add(gameAnswers[x]);
-                    }
-                    else
-                    {
-                        notMatch.Add(gameAnswers[x]);
-                    }
-                }
-
-                for(int k=0;k<guessDisplay.Count;k++)
-                {
-                    if(guessDisplay[k]!="_")
-                    { iteration++;}
-                }
-
-                if(iteration>0) { LetterFill();}
-
-                if(match.Count<notMatch.Count)
-                {
-                    gameAnswers.Clear();
-                    UpdateWordFamily(match);
-
-                    Console.WriteLine("Correct!");
-                    char guess = input[0];
-                    int chosenIndex = random.Next(wordSize);
-                    for (int i = 0; i < guessDisplay.Count; i++)
-                    {
-                        if (i == chosenIndex & guessDisplay[i] == "_")
-                        {
-                            guessDisplay[i] = input;
-                        }
-                    }
-
-                    if (guessDisplay.Contains("_") == false)
-                    {
-                        win = true;
-                        Console.WriteLine("The chosen word is " + gameAnswers[random.Next(gameAnswers.Count)]);
-                    }
+                    CheckFamilies();
+                    UpdateGuessProgress();
+                    updateStatus = 1;
+                    UpdateGameAnswers(updateStatus);
                 }
                 else
                 {
-                    gameAnswers.Clear();
-                    UpdateWordFamily(notMatch);
-                    Console.WriteLine("Incorrect guess! Try again");
+                    updateStatus = 2;
+                    UpdateGameAnswers(updateStatus);
                 }
+
+                if (!guessDisplay.Contains("_")) { win = true; }
+
                 nbrOfAttempts--;
             }
-
             GameConclude();
         }
 
-        public static void UpdateWordFamily(List<string> newList)
+        public static void UpdateGameAnswers(int status)
         {
-            for(int i=0;i<newList.Count;i++)
-            {
-                gameAnswers.Add(newList[i]);
-            }
-        }
+            gameAnswers.Clear();
 
-        public static void LetterFill()
-        {
-            string word;
-            bool correct = true;
-            for(int i=0;i<match.Count;i++)
-            {
-                word = match[i];
-                for (int j = 0; j < guessDisplay.Count; j++)
-                {
-                    if (guessDisplay[j] != "_")
-                    {
-                        if(guessDisplay[j].Equals(word[j]))
-                        { correct = true; }
-                        else { correct = false;}
-                    }
-                }
-
-                if (correct == false)
-                {
-                    notMatch.Add(word);
-                    match.RemoveAt(i);
-                }
-            }
+            if (status == 1) { gameAnswers = biggestIndexFamily; }
+            else if (status == 2) { gameAnswers = notMatch; }
         }
 
         public static void GameConclude()
         {
             if (win)
             {
+                Console.WriteLine();
                 Console.WriteLine("YOU WON! Press any key to quit.");
+                Console.ReadKey();
+                System.Environment.Exit(0);
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("YOU LOST! Press any key to quit.");
                 Console.ReadKey();
                 System.Environment.Exit(0);
             }
