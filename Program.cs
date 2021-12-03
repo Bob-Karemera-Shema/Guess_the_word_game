@@ -95,10 +95,10 @@ namespace Word_Family_Guess_the_word_game_
             }
             Console.WriteLine();
             Console.Write("Enter your guess: ");
-            input = Console.ReadLine().ToUpper();
+            input = Console.ReadLine().ToLower();
             Console.WriteLine();
 
-            if (((int)input[0] > 96 & (int)input[0] < 123))
+            if (!((int)input[0] > 96 & (int)input[0] < 123))
             {
                 Console.WriteLine("Your input was not a letter of the alphabet!");
                 Console.WriteLine("Enter a letter between A-Z");
@@ -177,7 +177,7 @@ namespace Word_Family_Guess_the_word_game_
             {
                 for (int j = 0; j < guessDisplay.Count; j++)
                 {
-                    if (biggestFamilyCharRep[i][j].Equals(input[0]) & (guessDisplay[i] == "_"))
+                    if (biggestFamilyCharRep[i][j].Equals(input[0]))
                     {
                         indexArray[i]++;
                     }
@@ -239,10 +239,14 @@ namespace Word_Family_Guess_the_word_game_
         public static void UpdateGuessProgress()
         {
             int count = 0;
+            List<bool> correct = new List<bool>();
             for(int x = 0; x<guessDisplay.Count; x++)
             {
                 if(guessDisplay[x] == "_") 
-                { count++; }
+                { 
+                    count++; 
+                    correct.Add(true); // initialise bool array
+                }
             }
 
             if (count == guessDisplay.Count)
@@ -267,12 +271,15 @@ namespace Word_Family_Guess_the_word_game_
                     {
                         if (guessDisplay[i] != "_")
                         {
-                            if (biggestIndexFamily[j][i].Equals(guessDisplay[i]))
+                            if (!(biggestIndexFamily[j][i].Equals(guessDisplay[i])))
                             {
-                                inputMatchProgress.Add(biggestIndexFamily[j]);
+                                correct[i] = false;
                             }
                         }
                     }
+
+                    if(!correct.Contains(false))
+                    { inputMatchProgress.Add(biggestIndexFamily[j]); }
                 }
             }
 
@@ -288,6 +295,27 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        public static void UpdatePossibleAnswers(int status)
+        {
+            gameAnswers.Clear();
+
+            if (status == 1)
+            {
+                for (int i = 0; i < inputMatchProgress.Count; i++)
+                {
+                    gameAnswers.Add(inputMatchProgress[i]);
+                }
+            }
+
+            if (status == 2)
+            {
+                for (int i = 0; i < inputMatchProgress.Count; i++)
+                {
+                    gameAnswers.Add(notMatch[i]);
+                }
+            }
+        }
+
         public static void GamePlay()
         {
             while (!win & nbrOfAttempts != 0)
@@ -298,18 +326,18 @@ namespace Word_Family_Guess_the_word_game_
                 GameInput();
                 DictionaryCheck();
 
-                if (match.Count < notMatch.Count)
+                if (match.Count > notMatch.Count)
                 {
                     CheckFamilies();
                     UpdateGuessProgress();
                     updateStatus = 1;
-                    UpdateGameAnswers(updateStatus);
+                    UpdatePossibleAnswers(updateStatus);
                 }
                 else
                 {
                     Console.WriteLine("Wrong Guess! Try again");
                     updateStatus = 2;
-                    UpdateGameAnswers(updateStatus);
+                    UpdatePossibleAnswers(updateStatus);
                 }
 
                 if (!guessDisplay.Contains("_")) { win = true; }
