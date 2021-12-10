@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Word_Family_Guess_the_word_game_
 {
@@ -9,20 +11,13 @@ namespace Word_Family_Guess_the_word_game_
         private static Random random = new Random();
         private static string input;
         private static bool win;
-        private static List<string> gameAnswers; //list to hold dictionary words
-        private static int wordSize;
-        private static List<string> guessDisplay;
-        private static List<string> match;
-        private static List<string> notMatch;
+        private static List<string> gameAnswers = new List<string>(); //list to hold dictionary words
+        private static int wordSize = 0;
+        private static List<string> guessDisplay = new List<string>(wordSize);
+        private static List<string> match = new List<string>();
+        private static List<string> notMatch = new List<string>();
         private static int nbrOfAttempts;
-        private static int initialWordIndex;
-        private static List<string> family1 = new List<string> {"a"};
-        private static List<string> family2 = new List<string> { "a" };
-        private static List<string> family3 = new List<string> { "a" };
-        private static List<string> family4 = new List<string> { "a" };
-        private static List<string> family5 = new List<string> { "a" };
-        private static List<string> family6 = new List<string> { "a" };
-        private static List<string> family7 = new List<string> { "a" };
+        private static int[] familyArray = new int[7];
         private static List<string> biggestFamilyCharRep = new List<string>();
         private static List<string> biggestIndexFamily = new List<string>();
         private static List<string> inputMatchProgress = new List<string>();
@@ -32,7 +27,6 @@ namespace Word_Family_Guess_the_word_game_
         {
 
             wordSize = random.Next(4, 12);
-            gameAnswers = new List<string>();
             try
             {
                 // Create an instance of StreamReader to read from a file.
@@ -59,7 +53,6 @@ namespace Word_Family_Guess_the_word_game_
             }
             win = false;
 
-            guessDisplay = new List<string>(wordSize);
             for (int i = 0; i < wordSize; i++)
             {
                 guessDisplay.Add("_");
@@ -70,9 +63,6 @@ namespace Word_Family_Guess_the_word_game_
             }
 
             nbrOfAttempts = wordSize * 2;
-            match = new List<string>();
-            notMatch = new List<string>();
-            initialWordIndex = random.Next(wordSize);
 
             GameIntro();
         }
@@ -125,7 +115,6 @@ namespace Word_Family_Guess_the_word_game_
         {
             int count = 0;
             int bigFamily = 0;
-            int[] familyArray = new int[7];
             string currentWord;
 
             for (int x = 0;x < familyArray.Length;x++)
@@ -144,23 +133,12 @@ namespace Word_Family_Guess_the_word_game_
                         count++;
                     }
                 }
-                UpdateFamilies(count, ref familyArray);
+                familyArray[count--]++;  //Update families
             }
 
-            bigFamily = GetMax(familyArray);
+            bigFamily = GetMaxCharacters();
             UpdateBigCharFamily(bigFamily);
             CheckIndexFamily();
-        }
-
-        public static void UpdateFamilies(int count, ref int[] families)
-        {
-            if (count == 1) { families[count--] = count; }
-            else if (count == 2) { families[count--] = count; }
-            else if (count == 3) { families[count--] = count; }
-            else if (count == 4) { families[count--] = count; }
-            else if (count == 5) { families[count--] = count; }
-            else if (count == 6) { families[count--] = count; }
-            else { families[count--] = count; }
         }
 
         public static void CheckIndexFamily()
@@ -168,7 +146,7 @@ namespace Word_Family_Guess_the_word_game_
             int maxIndex = 0;
             int[] indexArray = new int[guessDisplay.Count];
 
-            for (int x = 0; x < wordSize; x++)
+            for (int x = 0; x < indexArray.Length; x++)
             {
                 indexArray[x] = 0;
             }
@@ -179,28 +157,48 @@ namespace Word_Family_Guess_the_word_game_
                 {
                     if (biggestFamilyCharRep[i][j].Equals(input[0]))
                     {
-                        indexArray[i]++;
+                        indexArray[j]++;
                     }
                 }
             }
 
-            maxIndex = GetMax(indexArray);
+            maxIndex = GetMaxIndex(indexArray);
             UpdateBigIndexFamily(maxIndex);
         }
 
-        public static int GetMax(int[] array)
+        public static int GetMaxCharacters()
+        {
+            int max = familyArray[0];
+            int index = 0;
+            for (int i = 1; i < familyArray.Length; i++)
+            {
+                if (familyArray[i] > max)
+                {
+                    max = familyArray[i];
+                    index = i;
+                }
+            }
+            return index;
+        }
+
+        public static int GetMaxIndex(int[] array)
         {
             int max = array[0];
+            int index = 0;
             for (int i = 1; i < array.Length; i++)
             {
-                if (array[i] > max) { max = array[i]; }
+                if (array[i] > max) 
+                { 
+                    max = array[i];
+                    index = i;
+                }
             }
-            return max;
+            return index;
         }
 
         public static void UpdateBigCharFamily(int count)
         {
-            int index = 0;
+            int index;
 
             for (int x = 0;x < match.Count; x++)
             {
@@ -351,8 +349,14 @@ namespace Word_Family_Guess_the_word_game_
         {
             gameAnswers.Clear();
 
-            if (status == 1) { gameAnswers = biggestIndexFamily; }
-            else if (status == 2) { gameAnswers = notMatch; }
+            if (status == 1) 
+            {
+                gameAnswers = biggestIndexFamily.ToList(); 
+            }
+            else if (status == 2) 
+            { 
+                gameAnswers = notMatch.ToList();
+            }
         }
 
         public static void GameConclude()
@@ -368,9 +372,16 @@ namespace Word_Family_Guess_the_word_game_
             {
                 Console.WriteLine();
                 Console.WriteLine("YOU LOST! Press any key to quit.");
+
+                for(int i = 0; i < gameAnswers.Count; i++)
+                {
+                    Console.WriteLine(gameAnswers[i]);
+                }
+
                 Console.ReadKey();
                 System.Environment.Exit(0);
             }
+
         }
     }
 
