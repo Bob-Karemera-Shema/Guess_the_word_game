@@ -8,28 +8,58 @@ namespace Word_Family_Guess_the_word_game_
 {
     class WordFamily
     {
-        private static Random random = new Random();
-        private static string input;
-        private static bool win;
-        private static List<string> gameAnswers = new List<string>(); //list to hold dictionary words
-        private static int wordSize = 0;
-        private static List<char> guessDisplay;
-        private static List<string> contain = new List<string>();
-        private static List<string> notContain = new List<string>();
-        private static int nbrOfAttempts;
-        private static int[] familyArray = new int[7];
-        private static int bigFamily = 0;
-        private static int maxIndex = 0;
-        private static List<string> biggestFamilyCharRep = new List<string>();
-        private static List<string> biggestIndexFamily = new List<string>();
-        private static List<string> dictionaryMatchProgress = new List<string>();
-        private static int updateStatus = 0;
+        private static Random random = new Random();                              // declaring a random object to help randomly generate values
+        
+        private static string input;                                              // to hold character input by the user
+        
+        private static bool win;                                                  // bool to determine whether user wins or loses
+        
+        private static List<string> gameAnswers = new List<string>();             // list to hold dictionary words
+        
+        private static int wordSize = 0;                                          // the size of the word to be guessed
+        
+        private static List<char> guessDisplay;                                   // tracks the progress of guesses made by the player
+        
+        private static List<string> contain = new List<string>();                 // list of words containing the character input by the user
+        
+        private static List<string> notContain = new List<string>();              // list of words not containing the character input by the user
+        
+        private static List<string> biggestFamilyCharRep = new List<string>();    // list of words with the highest repetition of the input character
+        
+        private static List<string> biggestIndexFamily = new List<string>();      // list of words with where the input character is at the index
+                                                                                  // with the most possible words
+        
+        private static List<string> dictionaryMatchProgress = new List<string>(); // list of words which match the characters and indices of
+                                                                                  // already guessed words
+        
+        private static int nbrOfAttempts;                                         // number of attempts the player has left
+        
+        private static int[] familyArray = new int[7];                            // array contaning integer counters, the counters classify words
+                                                                                  // according to the number of times a guessed character appears
+                                                                                  // in a certain word
+        
+        private static int bigFamily = 0;                                         // variable containing an integer mapping to the word family a word
+                                                                                  // belongs to depending on the number of times a guessed character
+                                                                                  // appears in the word
+        
+        private static int maxIndex = 0;                                          // variable containing an integer mapping to the index family a word
+                                                                                  // belongs to depending on whether a guessed character is found at that
+                                                                                  // index in the word.
+        
+        private static int updateStatus = 0;                                      // variable to help determine what the new pool of words to choose from
+                                                                                  // is in the next iteration of the game
 
+
+        /// <summary>
+        /// Fuunction to initialise object attributes at the start of the program
+        /// </summary>
         public static void Initialise()
         {
 
-            wordSize = random.Next(4, 12);
-            guessDisplay = new List<char>(wordSize);
+            wordSize = random.Next(4, 12);                                        // randomly get the size of the word to guess
+            guessDisplay = new List<char>(wordSize);                              // define guess progress list with the number of characters matching
+                                                                                  // the word size
+            
             try
             {
                 // Create an instance of StreamReader to read from a file.
@@ -43,6 +73,7 @@ namespace Word_Family_Guess_the_word_game_
                     {
                         if (line.Length == wordSize)
                         {
+                            // each line contains a word and each word is added to gameAnswers list
                             gameAnswers.Add(line);
                         }
                     }
@@ -54,62 +85,82 @@ namespace Word_Family_Guess_the_word_game_
                 Console.WriteLine("The file could not be read:");
                 Console.WriteLine(e.Message);
             }
-            win = false;
+            
+            win = false;                                // initialise the win boll to false, the player hasn't won the game yet
 
-            for (int i = 0; i < wordSize; i++)
+            for (int i = 0; i < wordSize; i++)          // every index of the word to guess is initialise with dash marks
             {
                 guessDisplay.Add('_');
             }
 
-            nbrOfAttempts = wordSize * 2;
+            nbrOfAttempts = wordSize * 2;               // nummber of attempts the user has
 
             GameIntro();
         }
 
+        /// <summary>
+        /// Function to introduce the player to the game and start the game
+        /// </summary>
         public static void GameIntro()
         {
-            Console.Clear();
             Console.WriteLine("Discover the word in " + nbrOfAttempts + " attempts by guessing using letters.");
             Console.WriteLine("This word has: " + wordSize + " letters. Good luck!");
             Console.WriteLine("Enter a letter between A-Z");
             GamePlay();
         }
 
+        /// <summary>
+        /// Function to obtain input character guessed by the player
+        /// </summary>
         public static void GameInput()
         {
+            // first show the user their progress
             Console.Write("Player Guess: ");
             foreach (char letter in guessDisplay)
             {
                 Console.Write(letter);
             }
             Console.WriteLine();
+
+            // get player guess
             Console.Write("Enter your guess: ");
             input = Console.ReadLine().ToLower();
             Console.WriteLine();
 
-            if (!((int)input[0] > 96 & (int)input[0] < 123))
+            // check whether the input is a character and if not ask the player a new guess
+            if (!((int)input[0] > 96 && (int)input[0] < 123))
             {
                 Console.WriteLine("Your input was not a letter of the alphabet!");
                 Console.WriteLine("Enter a letter between A-Z");
-                GameInput();
+                GameInput();   // recursive call to the function
             }
         }
 
+        /// <summary>
+        /// Function to remove words which don't match guess progress
+        /// words are checked index by index
+        /// words are not removed if they contain the guess characters and
+        /// at exactly the index they appear at iin the guess progress list.
+        /// </summary>
         public static void DictionaryMatchProgress()
         {
-            int count = 0;
-            List<bool> correct = new List<bool>();
-            dictionaryMatchProgress = gameAnswers.ToList();
+            int count = 0;                                        // couter for not guessed characters
+            List<bool> correct = new List<bool>();                // bool to check each character of a word matches the one in the guess progress
+                                                                  // at a particuler index
+            
+            dictionaryMatchProgress = gameAnswers.ToList();       // copy word pool to a list which is going to be narrowed to according
+                                                                  // to game rules defined further in the code
 
             for (int x = 0; x < guessDisplay.Count; x++)
             {
                 if (guessDisplay[x] == '_')
                 {
-                    count++;
+                    count++;                                      // count number of not guessed characters
                 }
                 correct.Add(true); //initialise bool array
             }
 
+            // if the count is less than the number of characters of the word to guess, that means some character(s) have been guessed
             if (count < guessDisplay.Count)
             {
                 for (int i = 0; i < dictionaryMatchProgress.Count; i++)
@@ -118,14 +169,14 @@ namespace Word_Family_Guess_the_word_game_
                     {
                         for (int x = 0; x < correct.Count; x++)
                         {
-                            if (guessDisplay[x] == '_')
-                            {
-                                correct[x] = true;
-                            }
+                            correct[x] = true;
                         }
 
                         if (guessDisplay[j] != '_')
                         {
+                            // if a character index of a word in the word pool where a character was correctly guessed does not match
+                            // the character in the guess progress, it gets flaged and then removed.
+                            // this is because the word won't match the guesses made.
                             if (!(dictionaryMatchProgress[i][j].Equals(guessDisplay[j])))
                             {
                                 correct[j] = false;
@@ -139,14 +190,21 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        /// <summary>
+        /// Once the word pool has been narrowed down to fit the guess progress, the word pool is filtered to two groups.
+        /// Group 1: is a list of words containing the character guessed by the player.
+        /// Group 2: is a list of words not containing the character guessed by the player.
+        /// This function serves the purpose to separate these two groups.
+        /// </summary>
         public static void DictionaryCheck()
         {
+            //copy the word pool to both groups and remove word according to what group they fit in
             contain = dictionaryMatchProgress.ToList();
             notContain = dictionaryMatchProgress.ToList();
 
             for (int x = 0; x < dictionaryMatchProgress.Count; x++)
             {
-                if (gameAnswers[x].Contains(input))
+                if (dictionaryMatchProgress[x].Contains(input))
                 {
                     notContain.Remove(dictionaryMatchProgress[x]);
                 }
@@ -157,10 +215,16 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        /// <summary>
+        /// check words in thw word pool and classify words in word families according 
+        /// to the number of times the guessed character appears in each word in the word pool
+        /// </summary>
         public static void CheckFamilies()
         {
             int count = 0;
-            bigFamily = 0;
+            bigFamily = 0;                                     // initialise the family of words with the most number of words
+                                                               // depending on the number of occurences of the guessed character
+                                                               // in those words
 
             for (int x = 0;x < familyArray.Length;x++)
             {
@@ -180,11 +244,14 @@ namespace Word_Family_Guess_the_word_game_
                 familyArray[count--]++;  //Update families
             }
 
-            bigFamily = GetMaxCharacters();
+            bigFamily = GetMaxCharacters();                   // set the new big family
             UpdateBigCharFamily(bigFamily);
             CheckIndexFamily();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void CheckIndexFamily()
         {
             maxIndex = 0;
