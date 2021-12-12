@@ -55,7 +55,6 @@ namespace Word_Family_Guess_the_word_game_
         /// </summary>
         public static void Initialise()
         {
-
             wordSize = random.Next(4, 12);                                        // randomly get the size of the word to guess
             guessDisplay = new List<char>(wordSize);                              // define guess progress list with the number of characters matching
                                                                                   // the word size
@@ -114,6 +113,9 @@ namespace Word_Family_Guess_the_word_game_
         /// </summary>
         public static void GameInput()
         {
+            // show player number of attepmts left
+            Console.WriteLine("Number of Attempts left: " + nbrOfAttempts);
+
             // first show the user their progress
             Console.Write("Player Guess: ");
             foreach (char letter in guessDisplay)
@@ -163,7 +165,7 @@ namespace Word_Family_Guess_the_word_game_
             // if the count is less than the number of characters of the word to guess, that means some character(s) have been guessed
             if (count < guessDisplay.Count)
             {
-                for (int i = 0; i < dictionaryMatchProgress.Count; i++)
+                for (int i = 0; i < gameAnswers.Count; i++)
                 {
                     for (int j = 0; j < guessDisplay.Count; j++)
                     {
@@ -177,7 +179,7 @@ namespace Word_Family_Guess_the_word_game_
                             // if a character index of a word in the word pool where a character was correctly guessed does not match
                             // the character in the guess progress, it gets flaged and then removed.
                             // this is because the word won't match the guesses made.
-                            if (!(dictionaryMatchProgress[i][j].Equals(guessDisplay[j])))
+                            if (!(gameAnswers[i][j].Equals(guessDisplay[j])))
                             {
                                 correct[j] = false;
                             }
@@ -185,7 +187,7 @@ namespace Word_Family_Guess_the_word_game_
                     }
 
                     if (correct.Contains(false))
-                    { dictionaryMatchProgress.RemoveAt(i); }
+                    { dictionaryMatchProgress.Remove(gameAnswers[i]); }
                 }
             }
         }
@@ -250,13 +252,14 @@ namespace Word_Family_Guess_the_word_game_
         }
 
         /// <summary>
-        /// 
+        /// Function to identify the largest group of word containing the guessed character at a particular index
         /// </summary>
         public static void CheckIndexFamily()
         {
             maxIndex = 0;
-            int[] indexArray = new int[guessDisplay.Count];
+            int[] indexArray = new int[guessDisplay.Count];           // array containing counters at every index of every word character
 
+            // initialise every element of the array
             for (int x = 0; x < indexArray.Length; x++)
             {
                 indexArray[x] = 0;
@@ -273,10 +276,15 @@ namespace Word_Family_Guess_the_word_game_
                 }
             }
 
-            maxIndex = GetMaxIndex(indexArray);
+            maxIndex = GetMaxIndex(indexArray);                      // get the index with more matching words 
             UpdateBigIndexFamily(maxIndex);
         }
 
+        /// <summary>
+        /// Determines which family has more words depending on the number of guessed character occurences
+        /// </summary>
+        /// <integer></returns>
+        /// Returns an integer index mapping to the index of the largest word family in the families array
         public static int GetMaxCharacters()
         {
             int max = familyArray[0];
@@ -292,6 +300,11 @@ namespace Word_Family_Guess_the_word_game_
             return index;
         }
 
+        /// <summary>
+        /// Determines which family has more words depending on the index of the guessed character
+        /// </summary>
+        /// <integer></returns>
+        /// Returns an integer index mapping an the index in the guess progress list
         public static int GetMaxIndex(int[] array)
         {
             int max = array[0];
@@ -307,43 +320,60 @@ namespace Word_Family_Guess_the_word_game_
             return index;
         }
 
+        /// <summary>
+        /// Function to update word pool to only contain words in the largest word family depending on 
+        /// the guess character occurence
+        /// </summary>
+        /// <param name="count"></param>
         public static void UpdateBigCharFamily(int count)
         {
             biggestFamilyCharRep = contain.ToList();
             int index;
 
-            for (int x = 0;x < biggestFamilyCharRep.Count; x++)
+            for (int x = 0;x < contain.Count; x++)
             {
                 index = 0;
-                for(int i = 0;i < biggestFamilyCharRep[x].Length; i++)
+                for(int i = 0;i < contain[x].Length; i++)
                 {
-                    if(biggestFamilyCharRep[x][i].Equals(input[0]))
+                    if(contain[x][i].Equals(input[0]))
                     { index++; }
                 }
 
                 if(!(index == count))
-                { biggestFamilyCharRep.RemoveAt(x);}
+                { biggestFamilyCharRep.Remove(contain[x]);}
             }
         }
 
+        /// <summary>
+        /// Function to update the word to only contain words with the guess character at the index with
+        /// with more words
+        /// </summary>
+        /// <param name="index"></param>
         public static void UpdateBigIndexFamily(int index)
         {
             biggestIndexFamily = biggestFamilyCharRep.ToList();
             
-            for (int i = 0; i < biggestIndexFamily.Count; i++)
+            for (int i = 0; i < biggestFamilyCharRep.Count; i++)
             {
-                if (!(biggestIndexFamily[i][index].Equals(input[0])))
+                if (!(biggestFamilyCharRep[i][index].Equals(input[0])))
                 {
-                    biggestIndexFamily.RemoveAt(i);
+                    biggestIndexFamily.Remove(biggestFamilyCharRep[i]);
                 }
             }
         }
 
+        /// <summary>
+        /// Function to update the guess progress with the correct guess at the max index
+        /// </summary>
         public static void UpdateGuessProgress()
         {
             guessDisplay[maxIndex] = input[0];
         }
 
+        /// <summary>
+        /// Function to update the word pool to the new filtered list
+        /// </summary>
+        /// <param name="status"></param>
         public static void UpdatePossibleAnswers(int status)
         {
             gameAnswers.Clear();
@@ -359,6 +389,9 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        /// <summary>
+        /// Function to control the game flow
+        /// </summary>
         public static void GamePlay()
         {
             while (!win & nbrOfAttempts != 0)
@@ -372,6 +405,7 @@ namespace Word_Family_Guess_the_word_game_
 
                 if (contain.Count > notContain.Count)
                 {
+                    Console.WriteLine("Correct guess! Keep going");
                     CheckFamilies();
                     UpdateGuessProgress();
                     updateStatus = 1;
@@ -391,43 +425,49 @@ namespace Word_Family_Guess_the_word_game_
             GameConclude();
         }
 
-        public static void UpdateGameAnswers(int status)
-        {
-            gameAnswers.Clear();
-
-            if (status == 1) 
-            {
-                gameAnswers = biggestIndexFamily.ToList(); 
-            }
-            else if (status == 2) 
-            { 
-                gameAnswers = notContain.ToList();
-            }
-        }
-
+        /// <summary>
+        /// Function to conclude the game
+        /// Informs user if they have won or not and why
+        /// </summary>
         public static void GameConclude()
         {
             if (win)
             {
                 Console.WriteLine();
                 Console.WriteLine("YOU WON! Press any key to quit.");
-                Console.ReadKey();
-                System.Environment.Exit(0);
+                Console.Write("Word of the game was: ");
+
+                for (int i = 0; i < guessDisplay.Count; i++)
+                {
+                    Console.Write(guessDisplay[i]);
+                }
+                Console.WriteLine();
+            }
+            if (nbrOfAttempts == 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("You have " + nbrOfAttempts + " attempts left.");
+                Console.WriteLine("YOU LOST! Press any key to quit.");
+                ShowRandomWord();
+            }
+
+            Console.ReadKey();
+            System.Environment.Exit(0);
+        }
+
+        /// <summary>
+        /// Randomly choose word of the game from word pool
+        /// </summary>
+        public static void ShowRandomWord()
+        {
+            if(gameAnswers.Count > 1)
+            {
+                Console.WriteLine("Word of the game was: " + gameAnswers[random.Next(gameAnswers.Count)]);
             }
             else
             {
-                Console.WriteLine();
-                Console.WriteLine("YOU LOST! Press any key to quit.");
-
-                for(int i = 0; i < gameAnswers.Count; i++)
-                {
-                    Console.WriteLine(gameAnswers[i]);
-                }
-
-                Console.ReadKey();
-                System.Environment.Exit(0);
+                Console.WriteLine("Word of the game was: " + gameAnswers[gameAnswers.Count - 1]);
             }
-
         }
     }
 
