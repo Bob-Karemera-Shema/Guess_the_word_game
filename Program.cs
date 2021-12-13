@@ -40,7 +40,7 @@ namespace Word_Family_Guess_the_word_game_
         
         private static int bigFamily = 0;                                         // variable containing an integer mapping to the word family a word
                                                                                   // belongs to depending on the number of times a guessed character
-                                                                                  // appears in the word
+                                                                                  // appears in the word (Easy level)
         
         private static int maxIndex = 0;                                          // variable containing an integer mapping to the index family a word
                                                                                   // belongs to depending on whether a guessed character is found at that
@@ -49,7 +49,28 @@ namespace Word_Family_Guess_the_word_game_
         private static int updateStatus = 0;                                      // variable to help determine what the new pool of words to choose from
                                                                                   // is in the next iteration of the game
 
+        private static string difficulty;                                           // string variable to get user's difficulty of choice
 
+        private static int[] characterRepetitionCoefficient = { 7, 6, 5, 4, 3, 2, 1 }; // array holding coefficients of preference for word families
+                                                                                       // according to the number of repetitions of the guessed character the word has
+
+        private static int[] vowelRepetitionCoefficient = { 8, 7, 6, 5, 4, 3, 2, 1 };             // array holding coefficients of preference for word families
+                                                                                       // according to the number of vowels a word in the word list has
+
+        private static int containCoefficient = 1;                                  // coefficient of preference for words containing guessed character
+        private static int notContainCoefficient = 10;                               // coefficient of preference for words not containing guessed character
+
+        private static int chosenFamily = 0;                                        // variable containing an integer mapping to the word family a word
+                                                                                    // belongs to depending on the number of times a guessed character
+                                                                                    // appears in the word (Hard level)
+
+        private static int chosenVowelFamily = 0;                                   // variable containing an integer mapping to the vowel family
+                                                                                    // a word belongs to depending on the number of vowels in the word
+
+        private static List<string> vowelFamilies = new List<string>();             // list of words selected depending on their vowel content and previous coefficients
+
+        private static int[] vowelArray = new int[8];                               // array contaning integer counters, the counters classify words
+                                                                                    // according to the number of vowel in a certain word
         /// <summary>
         /// Fuunction to initialise object attributes at the start of the program
         /// </summary>
@@ -100,18 +121,30 @@ namespace Word_Family_Guess_the_word_game_
         /// <summary>
         /// Function to introduce the player to the game and start the game
         /// </summary>
-        public static void GameIntro()
+        private static void GameIntro()
         {
+            Console.Clear();
             Console.WriteLine("Discover the word in " + nbrOfAttempts + " attempts by guessing using letters.");
             Console.WriteLine("This word has: " + wordSize + " letters. Good luck!");
             Console.WriteLine("Enter a letter between A-Z");
+            Console.WriteLine("Choose your difficulty level: Easy(E) or Hard(H) (E/H)");
+            difficulty = Console.ReadLine().ToLower();
+
+            if(!(difficulty[0].Equals('h') || difficulty[0].Equals('e')))
+            {
+                Console.WriteLine("Your input was not letter E or H!");
+                Console.WriteLine("Press Enter key to try again!");
+                Console.ReadKey();
+                GameIntro();
+            }
+
             GamePlay();
         }
 
         /// <summary>
         /// Function to obtain input character guessed by the player
         /// </summary>
-        public static void GameInput()
+        private static void GameInput()
         {
             // show player number of attepmts left
             Console.WriteLine("Number of Attempts left: " + nbrOfAttempts);
@@ -144,7 +177,7 @@ namespace Word_Family_Guess_the_word_game_
         /// words are not removed if they contain the guess characters and
         /// at exactly the index they appear at iin the guess progress list.
         /// </summary>
-        public static void DictionaryMatchProgress()
+        private static void DictionaryMatchProgress()
         {
             int count = 0;                                        // couter for not guessed characters
             List<bool> correct = new List<bool>();                // bool to check each character of a word matches the one in the guess progress
@@ -198,7 +231,7 @@ namespace Word_Family_Guess_the_word_game_
         /// Group 2: is a list of words not containing the character guessed by the player.
         /// This function serves the purpose to separate these two groups.
         /// </summary>
-        public static void DictionaryCheck()
+        private static void DictionaryCheck()
         {
             //copy the word pool to both groups and remove word according to what group they fit in
             contain = dictionaryMatchProgress.ToList();
@@ -217,11 +250,13 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        // START OF EASY IMPLEMENTATION
+
         /// <summary>
         /// check words in thw word pool and classify words in word families according 
         /// to the number of times the guessed character appears in each word in the word pool
         /// </summary>
-        public static void CheckFamilies()
+        private static void CheckFamilies()
         {
             int count = 0;
             bigFamily = 0;                                     // initialise the family of words with the most number of words
@@ -254,7 +289,7 @@ namespace Word_Family_Guess_the_word_game_
         /// <summary>
         /// Function to identify the largest group of word containing the guessed character at a particular index
         /// </summary>
-        public static void CheckIndexFamily()
+        private static void CheckIndexFamily()
         {
             maxIndex = 0;
             int[] indexArray = new int[guessDisplay.Count];           // array containing counters at every index of every word character
@@ -269,7 +304,7 @@ namespace Word_Family_Guess_the_word_game_
             {
                 for (int j = 0; j < guessDisplay.Count; j++)
                 {
-                    if (biggestFamilyCharRep[i][j].Equals(input[0]))
+                    if (biggestFamilyCharRep[i][j].Equals(input[0]) & guessDisplay[j].Equals('_'))
                     {
                         indexArray[j]++;
                     }
@@ -285,7 +320,7 @@ namespace Word_Family_Guess_the_word_game_
         /// </summary>
         /// <integer></returns>
         /// Returns an integer index mapping to the index of the largest word family in the families array
-        public static int GetMaxCharacters()
+        private static int GetMaxCharacters()
         {
             int max = familyArray[0];
             int index = 0;
@@ -305,7 +340,7 @@ namespace Word_Family_Guess_the_word_game_
         /// </summary>
         /// <integer></returns>
         /// Returns an integer index mapping an the index in the guess progress list
-        public static int GetMaxIndex(int[] array)
+        private static int GetMaxIndex(int[] array)
         {
             int max = array[0];
             int index = 0;
@@ -325,21 +360,21 @@ namespace Word_Family_Guess_the_word_game_
         /// the guess character occurence
         /// </summary>
         /// <param name="count"></param>
-        public static void UpdateBigCharFamily(int count)
+        private static void UpdateBigCharFamily(int count)
         {
             biggestFamilyCharRep = contain.ToList();
-            int index;
+            int occurence;
 
             for (int x = 0;x < contain.Count; x++)
             {
-                index = 0;
+                occurence = 0;
                 for(int i = 0;i < contain[x].Length; i++)
                 {
                     if(contain[x][i].Equals(input[0]))
-                    { index++; }
+                    { occurence++; }
                 }
 
-                if(!(index == count))
+                if(!(occurence == count))
                 { biggestFamilyCharRep.Remove(contain[x]);}
             }
         }
@@ -349,7 +384,7 @@ namespace Word_Family_Guess_the_word_game_
         /// with more words
         /// </summary>
         /// <param name="index"></param>
-        public static void UpdateBigIndexFamily(int index)
+        private static void UpdateBigIndexFamily(int index)
         {
             biggestIndexFamily = biggestFamilyCharRep.ToList();
             
@@ -365,7 +400,7 @@ namespace Word_Family_Guess_the_word_game_
         /// <summary>
         /// Function to update the guess progress with the correct guess at the max index
         /// </summary>
-        public static void UpdateGuessProgress()
+        private static void UpdateGuessProgress()
         {
             guessDisplay[maxIndex] = input[0];
         }
@@ -374,7 +409,7 @@ namespace Word_Family_Guess_the_word_game_
         /// Function to update the word pool to the new filtered list
         /// </summary>
         /// <param name="status"></param>
-        public static void UpdatePossibleAnswers(int status)
+        private static void UpdatePossibleAnswers(int status)
         {
             gameAnswers.Clear();
 
@@ -389,38 +424,257 @@ namespace Word_Family_Guess_the_word_game_
             }
         }
 
+        // END OF EASY IMPLEMENTATION
+
+        // START OF HARD IMPLEMENTATION
+
+        /// <summary>
+        /// Divides words in word families according to number of times the guessed character appears in the word
+        /// </summary>
+        private static void DivideWordFamilies()
+        {
+            int count = 0;
+
+            for (int x = 0; x < familyArray.Length; x++)
+            {
+                familyArray[x] = 0;
+            }
+
+            for (int i = 0; i < contain.Count; i++)
+            {
+                count = 0;
+                for (int j = 0; j < contain[i].Length; j++)
+                {
+                    if (contain[i][j].Equals(input[0]))
+                    {
+                        count++;
+                    }
+                }
+                familyArray[count--]++;  //Update families
+            }
+        }
+
+        /// <summary>
+        /// Takes every family and multiplies its number of elements and coefficient of preference
+        /// The highest coefficient is kept and is the new family chosen
+        /// </summary>
+        /// <returns></returns>
+        private static void FamilyCoefficients()
+        {
+            int[] largestCoefficient = new int[familyArray.Length];
+
+            // initialise
+            for (int i = 0; i < familyArray.Length; i++)
+            {
+                largestCoefficient[i] = 0;
+            }
+
+            for (int i = 0; i < familyArray.Length; i++)
+            {
+                largestCoefficient[i] = characterRepetitionCoefficient[i] * familyArray[i] * containCoefficient;
+            }
+
+            int max = largestCoefficient[0];
+            for (int i = 1; i < largestCoefficient.Length; i++)
+            {
+                if (largestCoefficient[i] > max)
+                {
+                    max = largestCoefficient[i];
+                    chosenFamily = i;
+                }
+            }
+            containCoefficient = max;
+        }
+
+        /// <summary>
+        /// Further divide word families according to the number of vowels in the word
+        /// </summary>
+        private static void VowelCheck()
+        {
+            int count = 0;
+            vowelFamilies = biggestFamilyCharRep.ToList();
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u'};
+
+            for (int x = 0; x < familyArray.Length; x++)
+            {
+                vowelArray[x] = 0;
+            }
+
+            for (int i = 0;i < biggestFamilyCharRep.Count;i++)
+            {
+                count = 0;
+                for(int j = 0;j < biggestFamilyCharRep[i].Length; j++)
+                {
+                    if(vowels.Contains(biggestFamilyCharRep[i][j]))
+                    {
+                        count++;
+                    }
+                }
+                vowelArray[count--]++;
+            }
+        }
+
+        /// <summary>
+        /// Takes every vowel family and multiplies its number of elements and coefficient of preference
+        /// The highest coefficient is kept and is the new family chosen
+        /// </summary>
+        private static void VowelCoefficients()
+        {
+            int[] largestCoefficient = new int[vowelArray.Length];
+
+            // initialise
+            for (int i = 0; i < familyArray.Length; i++)
+            {
+                largestCoefficient[i] = 0;
+            }
+
+            for (int i = 0; i < familyArray.Length; i++)
+            {
+                largestCoefficient[i] = vowelRepetitionCoefficient[i] * vowelArray[i] * containCoefficient;
+            }
+
+            int max = largestCoefficient[0];
+            for (int i = 1; i < largestCoefficient.Length; i++)
+            {
+                if (largestCoefficient[i] > max)
+                {
+                    max = largestCoefficient[i];
+                    chosenVowelFamily = i;
+                }
+            }
+            containCoefficient = max;
+        }
+
+        /// <summary>
+        /// Take the vowel family with the highest coeffiecient as the new word list
+        /// to be further analysed
+        /// </summary>
+        private static void GetVowelFamily()
+        {
+            int count = 0;
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u' };
+
+            for (int i = 0; i < biggestFamilyCharRep.Count; i++)
+            {
+                count = 0;
+                for (int j = 0; j < biggestFamilyCharRep[i].Length; j++)
+                {
+                    if (vowels.Contains(biggestFamilyCharRep[i][j]))
+                    {
+                        count++;
+                    }
+                }
+                if(!(vowelArray[chosenVowelFamily]==count))
+                {
+                    vowelFamilies.Remove(biggestFamilyCharRep[i]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Function to identify the largest group of word containing the guessed character at a particular index
+        /// </summary>
+        private static void CheckIndexFamily(bool hardLevelCall)
+        {
+            if (hardLevelCall)
+            {
+                maxIndex = 0;
+                int[] indexArray = new int[guessDisplay.Count];           // array containing counters at every index of every word character
+
+                // initialise every element of the array
+                for (int x = 0; x < indexArray.Length; x++)
+                {
+                    indexArray[x] = 0;
+                }
+
+                for (int i = 0; i < vowelFamilies.Count; i++)
+                {
+                    for (int j = 0; j < guessDisplay.Count; j++)
+                    {
+                        if (vowelFamilies[i][j].Equals(input[0]) & guessDisplay[j].Equals('_'))
+                        {
+                            indexArray[j]++;
+                        }
+                    }
+                }
+
+                maxIndex = GetMaxIndex(indexArray);                      // get the index with more matching words 
+                UpdateBigIndexFamily(maxIndex);
+            }
+        }
+
         /// <summary>
         /// Function to control the game flow
         /// </summary>
-        public static void GamePlay()
+        private static void GamePlay()
         {
             while (!win & nbrOfAttempts != 0)
             {
                 contain.Clear();
                 notContain.Clear();
 
-                GameInput();
-                DictionaryMatchProgress();
-                DictionaryCheck();
-
-                if (contain.Count > notContain.Count)
+                if (difficulty[0].Equals('e'))
                 {
-                    Console.WriteLine("Correct guess! Keep going");
-                    CheckFamilies();
-                    UpdateGuessProgress();
-                    updateStatus = 1;
-                    UpdatePossibleAnswers(updateStatus);
+                    // Difficulty level is easy
+                    GameInput();
+                    DictionaryMatchProgress();
+                    DictionaryCheck();
+
+                    if (contain.Count > notContain.Count)
+                    {
+                        Console.WriteLine("Correct guess! Keep going");
+                        CheckFamilies();
+                        UpdateGuessProgress();
+                        updateStatus = 1;
+                        UpdatePossibleAnswers(updateStatus);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong Guess! Try again");
+                        updateStatus = 2;
+                        UpdatePossibleAnswers(updateStatus);
+                        nbrOfAttempts--;
+                    }
+
+                    if (!guessDisplay.Contains('_')) { win = true; }
                 }
-                else
+
+                if(difficulty[0].Equals('h'))
                 {
-                    Console.WriteLine("Wrong Guess! Try again");
-                    updateStatus = 2;
-                    UpdatePossibleAnswers(updateStatus);
+                    containCoefficient = 1;
+                    notContainCoefficient = 10;
+
+                    // Difficulty level is hard
+                    GameInput();
+                    DictionaryMatchProgress();
+                    DictionaryCheck();
+
+                    containCoefficient *= contain.Count;
+                    notContainCoefficient *= notContain.Count;
+
+                    DivideWordFamilies();
+                    FamilyCoefficients();
+                    UpdateBigCharFamily(chosenFamily);
+                    VowelCheck();
+
+                    if(containCoefficient > notContainCoefficient)
+                    {
+                        Console.WriteLine("Correct guess! Keep going");
+                        CheckIndexFamily(true);
+                        UpdateGuessProgress();
+                        updateStatus = 1;
+                        UpdatePossibleAnswers(updateStatus);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong Guess! Try again");
+                        updateStatus = 2;
+                        UpdatePossibleAnswers(updateStatus);
+                        nbrOfAttempts--;
+                    }
+
+                    if (!guessDisplay.Contains('_')) { win = true; }
                 }
-
-                if (!guessDisplay.Contains('_')) { win = true; }
-
-                nbrOfAttempts--;
             }
             GameConclude();
         }
@@ -429,7 +683,7 @@ namespace Word_Family_Guess_the_word_game_
         /// Function to conclude the game
         /// Informs user if they have won or not and why
         /// </summary>
-        public static void GameConclude()
+        private static void GameConclude()
         {
             if (win)
             {
@@ -458,15 +712,15 @@ namespace Word_Family_Guess_the_word_game_
         /// <summary>
         /// Randomly choose word of the game from word pool
         /// </summary>
-        public static void ShowRandomWord()
+        private static void ShowRandomWord()
         {
-            if(gameAnswers.Count > 1)
+            if (gameAnswers.Count > 1)
             {
                 Console.WriteLine("Word of the game was: " + gameAnswers[random.Next(gameAnswers.Count)]);
             }
             else
             {
-                Console.WriteLine("Word of the game was: " + gameAnswers[gameAnswers.Count - 1]);
+                Console.WriteLine("Word of the game was: " + gameAnswers[0]);
             }
         }
     }
